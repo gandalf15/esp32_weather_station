@@ -454,7 +454,7 @@ void drawInsideHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, i
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   String humidity = String(dhtSensorData.humidity, 1) + "%";
   display->drawString(0 + x, 34 + y, humidity);
-  display->setFont(ArialMT_Plain_16);
+  display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   float cr = dht.getComfortRatio(comfState, dhtSensorData.temperature, dhtSensorData.humidity);
 
@@ -462,15 +462,18 @@ void drawInsideHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, i
   switch (comfState)
   {
   case Comfort_OK:
+    display->setFont(ArialMT_Plain_16);
     comfortStatus = "OK";
     break;
   case Comfort_TooHot:
+    display->setFont(ArialMT_Plain_16);
     comfortStatus = "Too Hot";
     break;
   case Comfort_TooCold:
     comfortStatus = "Too Cold";
     break;
   case Comfort_TooDry:
+    display->setFont(ArialMT_Plain_16);
     comfortStatus = "Too Dry";
     break;
   case Comfort_TooHumid:
@@ -492,7 +495,7 @@ void drawInsideHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, i
     comfortStatus = "Unknown";
     break;
   };
-  display->drawString(128 + x, 44 + y, comfortStatus);
+  display->drawString(128 + x, 40 + y, comfortStatus);
 }
 
 void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
