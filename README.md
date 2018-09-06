@@ -46,8 +46,9 @@ $ `git clone https://github.com/gandalf15/esp32_weather_station.git`
 3. set up your WiFi password
 4. Sign up here to get an API key: https://docs.thingpulse.com/how-tos/openweathermap-key/
 5. set up your API key
-6. find your city ID here: http://bulk.openweathermap.org/sample/city.list.json.gz
-7. set up your city ID
+6. set up either imperial or metric units IS_METRIC = [true | false]
+7. find your city ID here: http://bulk.openweathermap.org/sample/city.list.json.gz
+8. set up your city ID
 
 ### Compile and Upload
 1. Connect your ESP32 via the USB cable to your computer and click on the upload icon.

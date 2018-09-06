@@ -61,8 +61,8 @@ See more at https://thingpulse.com
 const uint32_t updateDHTIntervalSec = 10; // Must be at least 2 sec
 
 // WIFI Settings
-const char *WIFI_SSID = "YourWiFiName";
-const char *WIFI_PWD = "YourWiFiPassword";
+const char *WIFI_SSID = "YourWiFiNameHere";
+const char *WIFI_PWD = "YourWiFiPasswordHere";
 
 // Time zone Settings
 #define TZ 0      // (utc+) TZ in hours
@@ -80,9 +80,9 @@ const int SDC_PIN = 4; // pin on ESP32
 // Sign up here to get an API key:
 // https://docs.thingpulse.com/how-tos/openweathermap-key/
 const boolean IS_METRIC = true; // true = *C, false = *F
-const String OPEN_WEATHER_MAP_APP_ID = "YOUR_API_ID";
+const String OPEN_WEATHER_MAP_APP_ID = "Your_API_ID_here";
 // find your city ID here: http://bulk.openweathermap.org/sample/city.list.json.gz
-const String OPEN_WEATHER_MAP_LOCATION = "Your location ID"; // 3333224 = Aberdeen,GB
+const String OPEN_WEATHER_MAP_LOCATION = "Your_city_ID_here"; // 3333224 = Aberdeen,GB
 
 // Pick a language code from this list:
 // Arabic - ar, Bulgarian - bg, Catalan - ca, Czech - cz, German - de, Greek - el,
@@ -154,18 +154,20 @@ void drawPictures(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
 void drawInsideTemp(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawInsideHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
+void drawCurrentWindAndHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
-// void drawNextDaysForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawTodaysForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex);
-// void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex);
 void drawFooter(OLEDDisplay *display, OLEDDisplayUiState *state, int x, int y);
+// void drawNextDaysForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
+// void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex);
 // void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state);
 
 // Add frames
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
-FrameCallback frames[] = {drawDateTime, drawPictures, drawInsideTemp, drawInsideHum, drawCurrentWeather, drawForecast};
-int numberOfFrames = 6;
+FrameCallback frames[] = {drawDateTime, drawPictures, drawInsideTemp, drawInsideHum,
+                          drawCurrentWeather, drawCurrentWindAndHum, drawForecast};
+int numberOfFrames = 7;
 
 // OverlayCallback overlays[] = {drawHeaderOverlay};
 // int numberOfOverlays = 1;
@@ -297,7 +299,7 @@ void loop()
     * frame the forward animation will be used, otherwise the backwards animation is used.
     */
     // void transitionToFrame(uint8_t frame);
-    
+
     delay(remainingTimeBudget * 0.9);
   }
 }
@@ -402,9 +404,9 @@ void drawPictures(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
     last_min = timeInfo->tm_min;
     rand_num = rand();
   }
-  int index = (timeInfo->tm_min + rand_num)  % (sizeof(images)/sizeof(Image)-1);
+  int index = rand_num % (sizeof(images) / sizeof(Image) - 1);
   display->drawXbm((64 - images[index].width / 2) + x, (32 - images[index].height / 2) + y,
-                    images[index].width, images[index].height, images[index].bits);
+                   images[index].width, images[index].height, images[index].bits);
 }
 
 void drawInsideTemp(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
@@ -535,6 +537,28 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
   display->drawHorizontalLine(0 + x, 52 + y, 128 + x);
 }
 
+void drawCurrentWindAndHum(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
+{
+  // Humidity and comfort zone
+  display->setFont(ArialMT_Plain_16);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->drawString(64 + x, 0 + y, "Out");
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString(0 + x, 18 + y, "Humid");
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->drawString(128 + x, 18 + y, "Wind");
+
+  display->setFont(ArialMT_Plain_16);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  String humidity = String(currentWeatherData.humidity) + " %";
+  display->drawString(0 + x, 34 + y, humidity);
+  display->setFont(ArialMT_Plain_16);
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  String windSpeed = String(currentWeatherData.windSpeed, 1) + (IS_METRIC ? " m/s" : " mph");
+  display->drawString(128 + x, 34 + y, windSpeed);
+  drawFooter(display, state, x, y);
+}
+
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
 {
   drawTodaysForecastDetails(display, x, y, 1);
@@ -542,15 +566,6 @@ void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
   drawTodaysForecastDetails(display, x + 88, y, 3);
   drawFooter(display, state, x, y);
 }
-
-//void drawNextDaysForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
-//{
-//  drawForecastDetails(display, x, y, 4);
-//  drawForecastDetails(display, x + 44, y, 5);
-//  drawForecastDetails(display, x + 88, y, 6);
-//  drawHeaderOverlay(display, state);
-//  ;
-//}
 
 void drawTodaysForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
 {
@@ -564,23 +579,6 @@ void drawTodaysForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->setFont(ArialMT_Plain_10);
   display->drawString(x + 20, y, buff);
-
-  display->setFont(Meteocons_Plain_21);
-  display->drawString(x + 20, y + 12, forecasts[dayIndex].iconMeteoCon);
-  String temp = String(forecasts[dayIndex].temp, 0) + (IS_METRIC ? "°C" : "°F");
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x + 20, y + 34, temp);
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-}
-
-void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
-{
-  time_t observationTimestamp = forecasts[dayIndex].observationTime;
-  struct tm *timeInfo;
-  timeInfo = localtime(&observationTimestamp);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x + 20, y, WDAY_NAMES[timeInfo->tm_wday]);
 
   display->setFont(Meteocons_Plain_21);
   display->drawString(x + 20, y + 12, forecasts[dayIndex].iconMeteoCon);
@@ -622,6 +620,32 @@ void drawFooter(OLEDDisplay *display, OLEDDisplayUiState *state, int x, int y)
   display->drawString(128 + x, 54 + y, outTemp);
   display->drawHorizontalLine(0 + x, 52 + y, 128 + x);
 }
+
+//void drawNextDaysForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
+//{
+//  drawForecastDetails(display, x, y, 4);
+//  drawForecastDetails(display, x + 44, y, 5);
+//  drawForecastDetails(display, x + 88, y, 6);
+//  drawHeaderOverlay(display, state);
+//  ;
+//}
+
+// void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
+// {
+//   time_t observationTimestamp = forecasts[dayIndex].observationTime;
+//   struct tm *timeInfo;
+//   timeInfo = localtime(&observationTimestamp);
+//   display->setTextAlignment(TEXT_ALIGN_CENTER);
+//   display->setFont(ArialMT_Plain_10);
+//   display->drawString(x + 20, y, WDAY_NAMES[timeInfo->tm_wday]);
+
+//   display->setFont(Meteocons_Plain_21);
+//   display->drawString(x + 20, y + 12, forecasts[dayIndex].iconMeteoCon);
+//   String temp = String(forecasts[dayIndex].temp, 0) + (IS_METRIC ? "°C" : "°F");
+//   display->setFont(ArialMT_Plain_10);
+//   display->drawString(x + 20, y + 34, temp);
+//   display->setTextAlignment(TEXT_ALIGN_LEFT);
+// }
 
 // void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state)
 // {
