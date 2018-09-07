@@ -189,7 +189,7 @@ void setup()
       NULL,           /* Task input parameter */
       5,              /* Priority of the task */
       &dhtTaskHandle, /* Task handle. */
-      1);             /* Core where the task should run */
+      0);             /* Core where the task should run */
 
   if (dhtTaskHandle == NULL)
   {
@@ -300,7 +300,7 @@ void loop()
     */
     // void transitionToFrame(uint8_t frame);
 
-    delay(remainingTimeBudget * 0.9);
+    delay(remainingTimeBudget / 2);
   }
 }
 
